@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GharSetu 3.1 — Working Prototype</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#64748b;--green:#16794b;--green2:#e5f6ed;--blue:#2457c5;--line:#e3e9f2;--red:#b42318;--amber:#9a6700}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(125deg,#124c37,#16845b);color:white;padding:22px max(18px,calc((100vw - 1180px)/2));}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{font-size:25px;font-weight:850;letter-spacing:.2px}.tag{opacity:.9;font-size:13px}.demo{font-size:12px;border:1px solid #ffffff70;border-radius:999px;padding:7px 11px}
+.wrap{max-width:1180px;margin:auto;padding:20px 16px 42px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button,.btn{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:700;background:#e9eef8;color:#23324c}
+button:hover{filter:brightness(.97)}button.primary{background:var(--green);color:white}button.active{background:#173e31;color:white}button.danger{background:#fff0ef;color:var(--red)}button.small{padding:6px 9px;font-size:12px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:0 3px 14px #1b2d4a08}.stat .label{color:var(--muted);font-size:13px}.stat .num{font-size:27px;font-weight:850;margin:5px 0}.stat .hint{font-size:12px;color:var(--muted)}
+h2{font-size:22px;margin:0 0 5px}h3{font-size:16px;margin:0 0 12px}.sub{color:var(--muted);margin:0 0 18px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.section{margin-top:18px}.bar{height:10px;background:#e8edf4;border-radius:99px;overflow:hidden;margin:10px 0}.bar span{display:block;height:100%;background:#1c9a68;width:0}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:750;white-space:nowrap}.healthy{background:#e5f6ed;color:#16794b}.low{background:#fff3d6;color:#8a5b00}.soon{background:#e8efff;color:#2457c5}.high{background:#fff0ef;color:#b42318}.medium{background:#fff3d6;color:#8a5b00}.lowp{background:#e5f6ed;color:#16794b}
+input,select{font:inherit;padding:10px 11px;border:1px solid #d5deea;border-radius:9px;background:white;color:var(--ink);min-width:0;width:100%}label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:0 0 5px}.formgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}.formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.field{min-width:0}.actions{display:flex;gap:7px;flex-wrap:wrap}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:600px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:12px 10px}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}td{font-size:14px}.empty{padding:22px;text-align:center;color:var(--muted)}.itemname{font-weight:750}.muted{color:var(--muted);font-size:12px}.notice{background:#eef5ff;color:#25477e;border:1px solid #d6e5ff;border-radius:12px;padding:12px 14px;font-size:13px}.alert{background:#fff5e8;border:1px solid #ffe0b0;color:#744900;border-radius:12px;padding:12px 14px}.hidden{display:none!important}.list{display:grid;gap:10px}.listitem{border:1px solid var(--line);border-radius:12px;padding:13px;display:flex;justify-content:space-between;gap:12px;align-items:center}.listitem.done{opacity:.62}.listitem.done .itemname{text-decoration:line-through}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:8px}.card{padding:13px}.stat .num{font-size:23px}.formgrid,.formgrid.three{grid-template-columns:1fr}.wrap{padding:14px 10px 30px}.brand{font-size:22px}.nav button{flex:1}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><div class="brand">🏡 GharSetu</div><div class="tag">Ghar Ki Har Zaroorat, Time Se Pehle.</div></div><div class="demo">INTERACTIVE WORKING DEMO · Browser storage</div></div></header>
+<main class="wrap">
+<div class="nav" id="nav">
+<button class="active" data-page="dashboard">Dashboard</button><button data-page="ration">Smart Ration</button><button data-page="shopping">Shopping List</button><button data-page="alerts">Smart Alerts</button><button data-page="expenses">Monthly Expenses</button><button data-page="family">Family & Settings</button>
+</div>
+<section id="dashboard" class="page">
+<div class="row"><div><h2>Family Dashboard</h2><p class="sub">Your household essentials at a glance.</p></div><button class="primary" onclick="go('ration')">＋ Manage Ration</button></div>
+<div class="grid">
+<div class="card stat"><div class="label">Ration Items</div><div class="num" id="s-total">8</div><div class="hint">Tracked household items</div></div>
+<div class="card stat"><div class="label">Healthy Stock</div><div class="num" id="s-healthy">5</div><div class="hint">Stock looks sufficient</div></div>
+<div class="card stat"><div class="label">Need Attention</div><div class="num" id="s-attention">3</div><div class="hint">Low or buy soon</div></div>
+<div class="card stat"><div class="label">Shopping Items</div><div class="num" id="s-shopping">4</div><div class="hint">Not marked as bought</div></div>
+</div>
+<div class="grid section" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+<div class="card"><div class="row"><h3>Monthly Budget</h3><span class="pill soon" id="budget-percent">68.4% used</span></div><div class="row"><div><div class="muted">Spent</div><strong id="dash-spent">₹3,420</strong></div><div style="text-align:right"><div class="muted">Remaining</div><strong id="dash-remaining">₹1,580</strong></div></div><div class="bar"><span id="budget-bar" style="width:68.4%"></span></div><div class="muted" id="budget-caption">Budget: ₹5,000</div><div class="actions" style="margin-top:12px"><button onclick="go('expenses')">Manage expenses</button></div></div>
+<div class="card"><h3>Items to check</h3><div id="dashboard-alerts" class="list"></div><div class="actions" style="margin-top:12px"><button onclick="go('shopping')">Open shopping list</button><button onclick="go('alerts')">View all smart alerts</button></div></div>
+</div>
+<div class="card section"><div class="row"><h3>🔔 Smart Alerts</h3><span class="pill soon" id="dash-alert-count">0 alerts</span></div><div id="dashboard-smart-alerts" class="list"></div></div>
+<div class="notice section">Tip: Update stock and expenses as you use the demo. Changes are saved in this browser on this device. This is a demo, not a cloud-connected live service.</div>
+</section>
+<section id="ration" class="page hidden">
+<div class="row"><div><h2>Smart Ration</h2><p class="sub">View, search, add, edit and remove household items.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
+<div class="card">
+<div class="formgrid" style="margin-bottom:15px">
+<div class="field"><label>Search items</label><input id="ration-search" placeholder="e.g. Rice" oninput="renderRation()"></div>
+<div class="field"><label>Filter by stock</label><select id="ration-filter" onchange="renderRation()"><option value="all">All statuses</option><option>Healthy</option><option>Low</option><option>Buy Soon</option></select></div>
+<div class="field"><label>Sort</label><select id="ration-sort" onchange="renderRation()"><option value="name">Name A–Z</option><option value="days">Days remaining</option></select></div>
+<div class="field"><label>&nbsp;</label><button class="primary" style="width:100%" onclick="document.getElementById('new-ration-name').focus()">＋ Add item below</button></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Est. days left</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ration-body"></tbody></table></div>
+<div id="ration-empty" class="empty hidden">No items match your search.</div>
+</div>
+<div class="card section"><h3>Add a ration item</h3><form id="ration-form" class="formgrid">
+<div class="field"><label>Item name</label><input id="new-ration-name" required placeholder="e.g. Tea"></div><div class="field"><label>Quantity</label><input id="new-ration-qty" required placeholder="e.g. 500 g"></div><div class="field"><label>Days remaining</label><input id="new-ration-days" type="number" min="0" value="7" required></div><div class="field"><label>Stock status</label><select id="new-ration-status"><option>Healthy</option><option>Low</option><option>Buy Soon</option></select></div><div><button class="primary" type="submit">Add item</button></div>
+</form></div>
+</section>
+<section id="shopping" class="page hidden">
+<div class="row"><div><h2>Smart Shopping List</h2><p class="sub">Tick items as bought. Add new items and choose their priority.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
+<div class="card">
+<div class="formgrid three" style="margin-bottom:15px"><div class="field"><label>Search</label><input id="shop-search" placeholder="Search shopping list" oninput="renderShopping()"></div><div class="field"><label>Priority filter</label><select id="shop-filter" onchange="renderShopping()"><option value="all">All priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="field"><label>Show</label><select id="shop-show" onchange="renderShopping()"><option value="open">Not bought</option><option value="all">All items</option><option value="done">Bought</option></select></div></div>
+<div id="shopping-list" class="list"></div><div id="shopping-empty" class="empty hidden">No items in this view.</div>
+</div>
+<div class="card section"><h3>Add to shopping list</h3><form id="shop-form" class="formgrid"><div class="field"><label>Item name</label><input id="shop-name" required placeholder="e.g. Soap"></div><div class="field"><label>Priority</label><select id="shop-priority"><option>High</option><option selected>Medium</option><option>Low</option></select></div><div class="field"><label>When to buy</label><input id="shop-when" placeholder="e.g. This week"></div><div><button class="primary" type="submit">＋ Add to list</button></div></form></div>
+</section>
+<section id="alerts" class="page hidden">
+<div class="row"><div><h2>🔔 Smart Alerts</h2><p class="sub">Helpful reminders based on the demo stock, shopping list and budget.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
+<div class="notice">These are in-app demo alerts. They appear when you open the prototype; they are not push notifications and do not run in the background.</div>
+<div class="grid section">
+<div class="card stat"><div class="label">Stock alerts</div><div class="num" id="alert-stock-count">0</div><div class="hint">Low or nearly finished items</div></div>
+<div class="card stat"><div class="label">Shopping reminders</div><div class="num" id="alert-shop-count">0</div><div class="hint">High-priority items not bought</div></div>
+<div class="card stat"><div class="label">Budget status</div><div class="num" id="alert-budget-status">OK</div><div class="hint" id="alert-budget-hint">Within monthly budget</div></div>
+<div class="card stat"><div class="label">All alerts</div><div class="num" id="alert-total-count">0</div><div class="hint">Current reminders</div></div>
+</div>
+<div class="card section"><div class="row"><h3>Current alerts</h3><button onclick="renderSmartAlerts()">Refresh alerts</button></div><div id="smart-alert-list" class="list"></div><div id="smart-alert-empty" class="empty hidden">You're all caught up! No alerts right now.</div></div>
+</section>
+<section id="expenses" class="page hidden">
+<div class="row"><div><h2>Monthly Expenses</h2><p class="sub">Add actual expenses and see the balance update automatically.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
+<div class="grid"><div class="card stat"><div class="label">Monthly budget</div><div class="num" id="e-budget">₹5,000</div><div class="hint">Your spending limit</div></div><div class="card stat"><div class="label">Total spent</div><div class="num" id="e-spent">₹3,420</div><div class="hint">Recorded expenses</div></div><div class="card stat"><div class="label">Remaining</div><div class="num" id="e-remaining">₹1,580</div><div class="hint">Budget minus expenses</div></div><div class="card stat"><div class="label">Budget used</div><div class="num" id="e-percent">68.4%</div><div class="hint" id="e-status">Within budget</div></div></div>
+<div class="card section"><div class="row"><h3>Expense history</h3><button class="danger small" onclick="clearExpenses()">Clear expenses</button></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Action</th></tr></thead><tbody id="expense-body"></tbody></table></div><div id="expense-empty" class="empty hidden">No expenses recorded yet.</div></div>
+<div class="card section"><h3>Add an expense</h3><form id="expense-form" class="formgrid"><div class="field"><label>Description</label><input id="expense-desc" required placeholder="e.g. Weekly groceries"></div><div class="field"><label>Category</label><select id="expense-cat"><option>Groceries</option><option>Milk & Dairy</option><option>Household</option><option>Other</option></select></div><div class="field"><label>Amount (₹)</label><input id="expense-amount" type="number" min="1" step="1" required placeholder="e.g. 250"></div><div><button class="primary" type="submit">＋ Add expense</button></div></form></div>
+<div class="card section"><h3>Monthly budget setting</h3><form id="budget-form" class="formgrid three"><div class="field"><label>Budget amount (₹)</label><input id="budget-input" type="number" min="0" step="1" required></div><div><button class="primary" type="submit">Save budget</button></div></form></div>
+</section>
+<section id="family" class="page hidden">
+<div class="row"><div><h2>Family & Settings</h2><p class="sub">Demo family panel and local data controls.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
+<div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+<div class="card"><h3>Family roles (demo)</h3><div class="list"><div class="listitem"><div><div class="itemname">Family Admin</div><div class="muted">Manage items, budget and settings</div></div><span class="pill healthy">Admin</span></div><div class="listitem"><div><div class="itemname">Family Member</div><div class="muted">View list and mark items bought</div></div><span class="pill soon">Member</span></div></div><p class="muted" style="margin-top:12px">These are example roles only; real accounts and permissions are not connected.</p></div>
+<div class="card"><h3>Data & Privacy</h3><p>Prototype data is stored in this browser using local storage. It is not synced to another device.</p><div class="actions"><button onclick="exportData()">Export backup (JSON)</button><button class="danger" onclick="resetDemo()">Reset demo data</button></div><p class="muted" style="margin-top:12px">Reset removes your browser-saved demo changes and restores the original sample data.</p></div>
+</div>
+<div class="card section"><h3>About this prototype</h3><p>GharSetu helps families track household supplies, plan shopping and monitor expenses. This is an interactive front-end demo; login, cloud sync, real notifications and production security would need a backend.</p></div>
+</section>
+</main><footer>GharSetu 3.1 · Interactive working prototype · Demo data only, not a production app</footer>
+<script>
+const STORAGE_KEY='gharsetu_working_demo_v31';
+const initialState=()=>({
+ budget:5000,
+ ration:[
+ {id:1,name:'Rice',qty:'7 kg',days:18,status:'Healthy'},
+ {id:2,name:'Wheat Flour',qty:'4 kg',days:10,status:'Healthy'},
+ {id:3,name:'Dal',qty:'1.2 kg',days:6,status:'Healthy'},
+ {id:4,name:'Cooking Oil',qty:'0.7 L',days:5,status:'Low'},
+ {id:5,name:'Sugar',qty:'0.6 kg',days:7,status:'Low'},
+ {id:6,name:'Milk',qty:'2 packs',days:2,status:'Buy Soon'},
+ {id:7,name:'Salt',qty:'1 kg',days:25,status:'Healthy'},
+ {id:8,name:'Spices',qty:'3 packs',days:20,status:'Healthy'}],
+ shopping:[
+ {id:101,name:'Cooking Oil',priority:'High',when:'Buy within 5 days',done:false},
+ {id:102,name:'Milk',priority:'High',when:'Buy within 2 days',done:false},
+ {id:103,name:'Sugar',priority:'Medium',when:'Buy this week',done:false},
+ {id:104,name:'Dal',priority:'Medium',when:'Review stock',done:false}],
+ expenses:[
+ {id:201,desc:'Weekly groceries',cat:'Groceries',date:'2026-10-01',amount:1850},
+ {id:202,desc:'Milk and dairy',cat:'Milk & Dairy',date:'2026-10-03',amount:620},
+ {id:203,desc:'Household supplies',cat:'Household',date:'2026-10-05',amount:550},
+ {id:204,desc:'Other essentials',cat:'Other',date:'2026-10-07',amount:400}]
+});
+let state;
+function load(){try{const s=localStorage.getItem(STORAGE_KEY);state=s?JSON.parse(s):initialState()}catch(e){state=initialState()} if(!state||!Array.isArray(state.ration))state=initialState();save()}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function go(page){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('hidden',x.id!==page));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));if(page==='ration')renderRation();if(page==='shopping')renderShopping();if(page==='expenses')renderExpenses();if(page==='alerts')renderSmartAlerts();window.scrollTo({top:0,behavior:'smooth'})}
+document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function statusPill(s){let c=s==='Healthy'?'healthy':s==='Low'?'low':'soon';return `<span class="pill ${c}">${escapeHtml(s)}</span>`}
+function renderRation(){
+ const q=(document.getElementById('ration-search')?.value||'').toLowerCase(), f=document.getElementById('ration-filter')?.value||'all', sort=document.getElementById('ration-sort')?.value||'name';
+ let items=state.ration.filter(x=>x.name.toLowerCase().includes(q)&&(f==='all'||x.status===f));
+ items.sort(sort==='days'?(a,b)=>a.days-b.days:(a,b)=>a.name.localeCompare(b.name));
+ document.getElementById('ration-body').innerHTML=items.map(x=>`<tr><td><div class="itemname">${escapeHtml(x.name)}</div><div class="muted">Item ID #${x.id}</div></td><td>${escapeHtml(x.qty)}</td><td>${x.days} days</td><td>${statusPill(x.status)}</td><td><div class="actions"><button class="small" onclick="editRation(${x.id})">Edit</button><button class="small danger" onclick="deleteRation(${x.id})">Delete</button><button class="small" onclick="addToShopping(${x.id})">＋ Shopping</button></div></td></tr>`).join('');
+ document.getElementById('ration-empty').classList.toggle('hidden',items.length>0);renderDashboard();
+}
+function editRation(id){const x=state.ration.find(a=>a.id===id);if(!x)return;let qty=prompt('Update quantity for '+x.name,x.qty);if(qty===null)return;let days=prompt('Estimated days remaining',x.days);if(days===null)return;let status=prompt('Status: Healthy, Low, or Buy Soon',x.status);if(status===null)return;status=['Healthy','Low','Buy Soon'].includes(status)?status:x.status;x.qty=qty.trim()||x.qty;x.days=Math.max(0,parseInt(days)||0);x.status=status;save();renderRation();renderDashboard()}
+function deleteRation(id){const x=state.ration.find(a=>a.id===id);if(x&&confirm('Delete '+x.name+' from ration items?')){state.ration=state.ration.filter(a=>a.id!==id);save();renderRation();renderDashboard()}}
+document.getElementById('ration-form').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('new-ration-name').value.trim();if(!name)return;if(state.ration.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert('This item is already in the ration list.');return}state.ration.push({id:Date.now(),name,qty:document.getElementById('new-ration-qty').value.trim(),days:Math.max(0,parseInt(document.getElementById('new-ration-days').value)||0),status:document.getElementById('new-ration-status').value});if(!state.shopping.some(x=>x.name.toLowerCase()===name.toLowerCase()))state.shopping.push({id:Date.now()+1,name,priority:'Medium',when:'Review stock',done:false});save();e.target.reset();document.getElementById('new-ration-days').value=7;renderRation();renderShopping();renderDashboard();alert('Ration item added successfully!')});
+function addToShopping(id){const x=state.ration.find(a=>a.id===id);if(!x)return;if(state.shopping.some(a=>a.name.toLowerCase()===x.name.toLowerCase()&&!a.done)){alert('This item is already on the shopping list.');return}state.shopping.push({id:Date.now(),name:x.name,priority:(x.status==='Low'||x.status==='Buy Soon')?'High':'Medium',when:'Added from ration list',done:false});save();renderShopping();renderDashboard();alert(x.name+' added to shopping list.')}
+function renderShopping(){const q=(document.getElementById('shop-search')?.value||'').toLowerCase(),f=document.getElementById('shop-filter')?.value||'all',show=document.getElementById('shop-show')?.value||'open';let items=state.shopping.filter(x=>x.name.toLowerCase().includes(q)&&(f==='all'||x.priority===f)&&(show==='all'||(show==='open'&&!x.done)||(show==='done'&&x.done)));const list=document.getElementById('shopping-list');list.innerHTML=items.map(x=>`<div class="listitem ${x.done?'done':''}"><div style="display:flex;gap:10px;align-items:center;min-width:0"><input aria-label="Mark ${escapeHtml(x.name)} bought" type="checkbox" style="width:20px;height:20px" ${x.done?'checked':''} onchange="toggleBought(${x.id},this.checked)"><div><div class="itemname">${escapeHtml(x.name)}</div><div class="muted">${escapeHtml(x.when||'No timing set')}</div></div></div><div class="actions"><span class="pill ${x.priority==='High'?'high':x.priority==='Medium'?'medium':'lowp'}">${escapeHtml(x.priority)}</span><button class="small" onclick="editShopping(${x.id})">Edit</button><button class="small danger" onclick="deleteShopping(${x.id})">Delete</button></div></div>`).join('');document.getElementById('shopping-empty').classList.toggle('hidden',items.length>0);renderDashboard()}
+function toggleBought(id,done){const x=state.shopping.find(a=>a.id===id);if(x)x.done=done;save();renderShopping()}
+function editShopping(id){const x=state.shopping.find(a=>a.id===id);if(!x)return;let p=prompt('Priority: High, Medium, or Low',x.priority);if(p===null)return;if(['High','Medium','Low'].includes(p))x.priority=p;let w=prompt('When to buy',x.when||'');if(w!==null)x.when=w;save();renderShopping()}
+function deleteShopping(id){const x=state.shopping.find(a=>a.id===id);if(x&&confirm('Remove '+x.name+' from shopping list?')){state.shopping=state.shopping.filter(a=>a.id!==id);save();renderShopping()}}
+document.getElementById('shop-form').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('shop-name').value.trim();if(!name)return;state.shopping.push({id:Date.now(),name,priority:document.getElementById('shop-priority').value,when:document.getElementById('shop-when').value.trim()||'No timing set',done:false});save();e.target.reset();renderShopping();alert('Added to shopping list!')});
+function totalSpent(){return state.expenses.reduce((s,x)=>s+Number(x.amount||0),0)}
+function renderExpenses(){const spent=totalSpent(),remaining=state.budget-spent,percent=state.budget?spent/state.budget*100:0;document.getElementById('e-budget').textContent=money(state.budget);document.getElementById('e-spent').textContent=money(spent);document.getElementById('e-remaining').textContent=money(remaining);document.getElementById('e-percent').textContent=percent.toFixed(1)+'%';document.getElementById('e-status').textContent=remaining<0?'Over budget by '+money(-remaining):'Within budget';document.getElementById('budget-input').value=state.budget;const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('expense-body').innerHTML=sorted.map(x=>`<tr><td>${escapeHtml(x.desc)}</td><td>${escapeHtml(x.cat)}</td><td>${escapeHtml(x.date)}</td><td><strong>${money(x.amount)}</strong></td><td><button class="small danger" onclick="deleteExpense(${x.id})">Delete</button></td></tr>`).join('');document.getElementById('expense-empty').classList.toggle('hidden',sorted.length>0);renderDashboard()}
+document.getElementById('expense-form').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('expense-amount').value);if(!Number.isFinite(amount)||amount<=0){alert('Enter an amount greater than zero.');return}state.expenses.push({id:Date.now(),desc:document.getElementById('expense-desc').value.trim(),cat:document.getElementById('expense-cat').value,date:new Date().toISOString().slice(0,10),amount});save();e.target.reset();renderExpenses();alert('Expense saved. Totals updated automatically.')});
+document.getElementById('budget-form').addEventListener('submit',e=>{e.preventDefault();state.budget=Math.max(0,Number(document.getElementById('budget-input').value)||0);save();renderExpenses();alert('Monthly budget saved.')});
+function deleteExpense(id){const x=state.expenses.find(a=>a.id===id);if(x&&confirm('Delete this expense?')){state.expenses=state.expenses.filter(a=>a.id!==id);save();renderExpenses()}}
+function clearExpenses(){if(confirm('Clear all expense records? This cannot be undone.')){state.expenses=[];save();renderExpenses()}}
+function getSmartAlerts(){
+ const alerts=[];
+ state.ration.forEach(x=>{
+   if(x.status==='Low') alerts.push({type:'stock',level:'High',title:x.name+' is running low',message:'About '+x.days+' day(s) of stock left. Consider adding it to your shopping list.',action:'ration',key:'ration-'+x.id});
+   else if(x.status==='Buy Soon') alerts.push({type:'stock',level:'Medium',title:x.name+' needs attention soon',message:'Estimated stock remaining: '+x.days+' day(s). Plan a refill.',action:'ration',key:'ration-'+x.id});
+ });
+ state.shopping.filter(x=>!x.done&&x.priority==='High').forEach(x=>alerts.push({type:'shopping',level:'High',title:'Buy '+x.name, message:x.when||'High-priority item is still on your list.',action:'shopping',key:'shopping-'+x.id}));
+ const spent=totalSpent(), remaining=state.budget-spent, percent=state.budget?spent/state.budget*100:0;
+ if(remaining<0) alerts.push({type:'budget',level:'High',title:'Monthly budget exceeded',message:'You are over budget by '+money(-remaining)+'. Review recent expenses.',action:'expenses',key:'budget-over'});
+ else if(state.budget>0&&percent>=80) alerts.push({type:'budget',level:'Medium',title:'Monthly budget is nearly used',message:percent.toFixed(1)+'% used. Remaining: '+money(remaining)+'.',action:'expenses',key:'budget-near'});
+ else alerts.push({type:'budget',level:'Low',title:'Budget is on track',message:money(remaining)+' remaining from your '+money(state.budget)+' monthly budget.',action:'expenses',key:'budget-ok'});
+ return alerts;
+}
+function alertLevelClass(level){return level==='High'?'high':level==='Medium'?'medium':'lowp'}
+function alertCard(a){return `<div class="listitem"><div style="min-width:0"><div class="row" style="justify-content:flex-start"><strong>${escapeHtml(a.title)}</strong><span class="pill ${alertLevelClass(a.level)}">${escapeHtml(a.level)}</span></div><div class="muted" style="margin-top:4px">${escapeHtml(a.message)}</div></div><button class="small" onclick="go('${a.action}')">Open</button></div>`}
+function renderSmartAlerts(){
+ const alerts=getSmartAlerts();
+ const stock=alerts.filter(a=>a.type==='stock').length, shop=alerts.filter(a=>a.type==='shopping').length;
+ setText('alert-stock-count',stock);setText('alert-shop-count',shop);
+ const budgetAlert=alerts.find(a=>a.type==='budget');setText('alert-budget-status',budgetAlert&&budgetAlert.level==='High'?'OVER':budgetAlert&&budgetAlert.level==='Medium'?'NEAR':'OK');setText('alert-budget-hint',budgetAlert?budgetAlert.message:'Budget status unavailable');
+ setText('alert-total-count',alerts.length);
+ const list=document.getElementById('smart-alert-list');if(list)list.innerHTML=alerts.map(alertCard).join('');
+ const empty=document.getElementById('smart-alert-empty');if(empty)empty.classList.toggle('hidden',alerts.length>0);
+ const dash=document.getElementById('dashboard-smart-alerts');if(dash)dash.innerHTML=alerts.slice(0,4).map(alertCard).join('')||'<div class="empty">No current alerts.</div>';
+ setText('dash-alert-count',alerts.length+' alert'+(alerts.length===1?'':'s'));
+}
+function renderDashboard(){if(!state)return;const total=state.ration.length,healthy=state.ration.filter(x=>x.status==='Healthy').length,attention=total-healthy,open=state.shopping.filter(x=>!x.done).length,spent=totalSpent(),remaining=state.budget-spent,percent=state.budget?spent/state.budget*100:0;setText('s-total',total);setText('s-healthy',healthy);setText('s-attention',attention);setText('s-shopping',open);setText('dash-spent',money(spent));setText('dash-remaining',money(remaining));setText('budget-caption','Budget: '+money(state.budget));setText('budget-percent',percent.toFixed(1)+'% used');document.getElementById('budget-bar').style.width=Math.max(0,Math.min(100,percent))+'%';document.getElementById('budget-bar').style.background=remaining<0?'#d92d20':'#1c9a68';const alerts=state.ration.filter(x=>x.status!=='Healthy').map(x=>`<div class="listitem"><div><div class="itemname">${escapeHtml(x.name)}</div><div class="muted">${x.days} day(s) remaining</div></div>${statusPill(x.status)}</div>`);document.getElementById('dashboard-alerts').innerHTML=alerts.length?alerts.join(''):'<div class="empty">No items need attention.</div>';renderSmartAlerts()}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}
+function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='GharSetu-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function resetDemo(){if(confirm('Reset all demo changes and restore sample data?')){state=initialState();save();renderAll();go('dashboard');alert('Demo data reset.');}}
+function renderAll(){renderRation();renderShopping();renderExpenses();renderDashboard()}
+load();renderAll();
+</script>
+</body></html>
