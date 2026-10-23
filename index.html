@@ -22,7 +22,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 </style>
 </head>
 <body>
-<header><div class="top"><div><div class="brand">🏡 GharSetu</div><div class="tag">Ghar Ki Har Zaroorat, Time Se Pehle.</div></div><div class="demo">INTERACTIVE WORKING DEMO · Browser storage</div></div></header>
+<header><div class="top"><div><div class="brand">🏡 GharSetu</div><div class="tag">Ghar Ki Har Zaroorat, Time Se Pehle.</div></div><div class="demo">INTERACTIVE WORKING DEMO · Browser storage</div></div></header>header class="top">
+  <div class="brand">
+    <img src="YAHAN-LOGO-FILE-KA-NAAM"
+         alt="Ghar Setu Logo"
+     div class="nav" id="nav">
+         style="width:40px;height:40px;object-fit:contain;">
+    Ghar Setu
+  </div>
 <main class="wrap">
 <div class="nav" id="nav">
 <button class="active" data-page="dashboard">Dashboard</button><button data-page="ration">Smart Ration</button><button data-page="shopping">Shopping List</button><button data-page="alerts">Smart Alerts</button><button data-page="expenses">Monthly Expenses</button><button data-page="family">Family & Settings</button>
@@ -34,7 +41,36 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 <div class="card stat"><div class="label">Healthy Stock</div><div class="num" id="s-healthy">5</div><div class="hint">Stock looks sufficient</div></div>
 <div class="card stat"><div class="label">Need Attention</div><div class="num" id="s-attention">3</div><div class="hint">Low or buy soon</div></div>
 <div class="card stat"><div class="label">Shopping Items</div><div class="num" id="s-shopping">4</div><div class="hint">Not marked as bought</div></div>
-</div>
+</div><section class="card section">
+  <h3>Choose Your Plan</h3>
+  <div class="grid">
+    <div class="card">
+      <h3>Basic — Free</h3>
+      <h2>₹0</h2>
+      <p>✓ Ration Stock Tracking</p>
+      <p>✓ Shopping List</p>
+      <p>✓ Monthly Budget</p>
+      <p>✓ Smart Alerts</p>
+      <button onclick="selectPlan('Basic')">
+        Use Free Plan
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>👑 Premium</h3>
+      <h2>₹99/month</h2>
+      <p>✓ All Basic Features</p>
+      <p>✓ Photo Scanner</p>
+      <p>✓ Master List & Family</p>
+      <p>✓ Health Suggestions</p>
+      <button onclick="selectPlan('Premium')">
+        Explore Premium
+      </button>
+    </div>
+  </div>
+  <p id="plan-message"></p>
+</section>
+
 <div class="grid section" style="grid-template-columns:repeat(2,minmax(0,1fr))">
 <div class="card"><div class="row"><h3>Monthly Budget</h3><span class="pill soon" id="budget-percent">68.4% used</span></div><div class="row"><div><div class="muted">Spent</div><strong id="dash-spent">₹3,420</strong></div><div style="text-align:right"><div class="muted">Remaining</div><strong id="dash-remaining">₹1,580</strong></div></div><div class="bar"><span id="budget-bar" style="width:68.4%"></span></div><div class="muted" id="budget-caption">Budget: ₹5,000</div><div class="actions" style="margin-top:12px"><button onclick="go('expenses')">Manage expenses</button></div></div>
 <div class="card"><h3>Items to check</h3><div id="dashboard-alerts" class="list"></div><div class="actions" style="margin-top:12px"><button onclick="go('shopping')">Open shopping list</button><button onclick="go('alerts')">View all smart alerts</button></div></div>
@@ -143,6 +179,32 @@ function deleteShopping(id){const x=state.shopping.find(a=>a.id===id);if(x&&conf
 document.getElementById('shop-form').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('shop-name').value.trim();if(!name)return;state.shopping.push({id:Date.now(),name,priority:document.getElementById('shop-priority').value,when:document.getElementById('shop-when').value.trim()||'No timing set',done:false});save();e.target.reset();renderShopping();alert('Added to shopping list!')});
 function totalSpent(){return state.expenses.reduce((s,x)=>s+Number(x.amount||0),0)}
 function renderExpenses(){const spent=totalSpent(),remaining=state.budget-spent,percent=state.budget?spent/state.budget*100:0;document.getElementById('e-budget').textContent=money(state.budget);document.getElementById('e-spent').textContent=money(spent);document.getElementById('e-remaining').textContent=money(remaining);document.getElementById('e-percent').textContent=percent.toFixed(1)+'%';document.getElementById('e-status').textContent=remaining<0?'Over budget by '+money(-remaining):'Within budget';document.getElementById('budget-input').value=state.budget;const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('expense-body').innerHTML=sorted.map(x=>`<tr><td>${escapeHtml(x.desc)}</td><td>${escapeHtml(x.cat)}</td><td>${escapeHtml(x.date)}</td><td><strong>${money(x.amount)}</strong></td><td><button class="small danger" onclick="deleteExpense(${x.id})">Delete</button></td></tr>`).join('');document.getElementById('expense-empty').classList.toggle('hidden',sorted.length>0);renderDashboard()}
+ function selectPlan(plan) {
+  document.getElementById("plan-message").textContent =
+    plan === "Premium"
+      ? "Premium selected! Payment is not enabled yet."
+      : "Basic Free Plan selected!";
+ }function previewGroceryPhoto() {
+  const input = document.getElementById("grocery-photo");
+  const preview = document.getElementById("grocery-preview");
+  const message = document.getElementById("scanner-message");
+
+  if (!input.files || !input.files[0]) {
+    message.textContent = "Please upload a grocery photo.";
+    return;
+  }
+
+  const file = input.files[0];
+
+  if (!file.type.startsWith("image/")) {
+    message.textContent = "Please select an image.";
+    return;
+  }
+
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+  message.textContent = "Photo uploaded. Automatic scanning is not connected yet.";
+   }
 document.getElementById('expense-form').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('expense-amount').value);if(!Number.isFinite(amount)||amount<=0){alert('Enter an amount greater than zero.');return}state.expenses.push({id:Date.now(),desc:document.getElementById('expense-desc').value.trim(),cat:document.getElementById('expense-cat').value,date:new Date().toISOString().slice(0,10),amount});save();e.target.reset();renderExpenses();alert('Expense saved. Totals updated automatically.')});
 document.getElementById('budget-form').addEventListener('submit',e=>{e.preventDefault();state.budget=Math.max(0,Number(document.getElementById('budget-input').value)||0);save();renderExpenses();alert('Monthly budget saved.')});
 function deleteExpense(id){const x=state.expenses.find(a=>a.id===id);if(x&&confirm('Delete this expense?')){state.expenses=state.expenses.filter(a=>a.id!==id);save();renderExpenses()}}
