@@ -19,6 +19,75 @@ input,select{font:inherit;padding:10px 11px;border:1px solid #d5deea;border-radi
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:8px}.card{padding:13px}.stat .num{font-size:23px}.formgrid,.formgrid.three{grid-template-columns:1fr}.wrap{padding:14px 10px 30px}.brand{font-size:22px}.nav button{flex:1}}
+
+/* PREMIUM PAYMENT DESIGN */
+
+.payment-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.65);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.payment-box {
+  background: white;
+  color: #172033;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border-radius: 18px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.payment-box h2 {
+  color: #16794b;
+}
+
+.payment-box h1 {
+  font-size: 30px;
+  margin: 12px 0;
+}
+
+.close-payment {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  border: none;
+  background: #eee;
+  padding: 7px 12px;
+  border-radius: 8px;
+}
+
+.payment-box select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  font-size: 15px;
+}
+
+.payment-note {
+  background: #fff4d6;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.payment-success {
+  display: none;
+  background: #e5f6ed;
+  color: #16794b;
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 10px;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -105,6 +174,38 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 <div class="card section"><h3>Add a ration item</h3><form id="ration-form" class="formgrid">
 <div class="field"><label>Item name</label><input id="new-ration-name" required placeholder="e.g. Tea"></div><div class="field"><label>Quantity</label><input id="new-ration-qty" required placeholder="e.g. 500 g"></div><div class="field"><label>Days remaining</label><input id="new-ration-days" type="number" min="0" value="7" required></div><div class="field"><label>Stock status</label><select id="new-ration-status"><option>Healthy</option><option>Low</option><option>Buy Soon</option></select></div><div><button class="primary" type="submit">Add item</button></div>
 </form></div>
+
+<!-- PREMIUM PHOTO SCANNER -->
+<div class="card section">
+
+  <h3>📸 Premium Photo Scanner</h3>
+
+  <p class="sub">
+    Upload a grocery photo to preview it.
+  </p>
+
+  <div class="field">
+    <label for="grocery-photo">Choose Grocery Photo</label>
+
+    <input
+      type="file"
+      id="grocery-photo"
+      accept="image/*"
+      onchange="previewGroceryPhoto()"
+    />
+  </div>
+
+  <img
+    id="grocery-preview"
+    alt="Grocery photo preview"
+    style="display:none;width:100%;max-width:300px;border-radius:12px;margin-top:12px;"
+  />
+
+  <p id="scanner-message" class="sub">
+    No photo selected.
+  </p>
+
+</div>
 </section>
 <section id="shopping" class="page hidden">
 <div class="row"><div><h2>Smart Shopping List</h2><p class="sub">Tick items as bought. Add new items and choose their priority.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
@@ -140,6 +241,46 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 </div>
 <div class="card section"><h3>About this prototype</h3><p>GharSetu helps families track household supplies, plan shopping and monitor expenses. This is an interactive front-end demo; login, cloud sync, real notifications and production security would need a backend.</p></div>
 </section>
+
+<!-- PREMIUM PAYMENT MODAL -->
+<div id="payment-modal" class="payment-overlay">
+  <div class="payment-box">
+
+    <button class="close-payment" onclick="closePayment()">✕</button>
+
+    <h2>👑 GharSetu Premium</h2>
+    <h1>₹149/month</h1>
+    <p>Unlock Premium Features:</p>
+
+    <p>✓ Photo Scanner</p>
+    <p>✓ Master List & Family</p>
+    <p>✓ Health Suggestions</p>
+
+    <label for="payment-method">Select Payment Method</label>
+
+    <select id="payment-method">
+      <option value="UPI">UPI</option>
+      <option value="Card">Debit / Credit Card</option>
+      <option value="Net Banking">Net Banking</option>
+    </select>
+
+    <p class="payment-note">
+      This is a demo payment. No real money will be collected.
+    </p>
+
+    <button class="primary"
+      style="width:100%"
+      onclick="completeDemoPayment()">
+      Pay ₹149 (Demo)
+    </button>
+
+    <div id="payment-success" class="payment-success">
+      ✓ Demo Payment Successful!
+      <p>Premium selected successfully.</p>
+    </div>
+
+  </div>
+</div>
 </main><footer>GharSetu 3.1 · Interactive working prototype · Demo data only, not a production app</footer>
 <script>
 const STORAGE_KEY='gharsetu_working_demo_v31';
