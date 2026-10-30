@@ -191,11 +191,49 @@ function deleteShopping(id){const x=state.shopping.find(a=>a.id===id);if(x&&conf
 document.getElementById('shop-form').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('shop-name').value.trim();if(!name)return;state.shopping.push({id:Date.now(),name,priority:document.getElementById('shop-priority').value,when:document.getElementById('shop-when').value.trim()||'No timing set',done:false});save();e.target.reset();renderShopping();alert('Added to shopping list!')});
 function totalSpent(){return state.expenses.reduce((s,x)=>s+Number(x.amount||0),0)}
 function renderExpenses(){const spent=totalSpent(),remaining=state.budget-spent,percent=state.budget?spent/state.budget*100:0;document.getElementById('e-budget').textContent=money(state.budget);document.getElementById('e-spent').textContent=money(spent);document.getElementById('e-remaining').textContent=money(remaining);document.getElementById('e-percent').textContent=percent.toFixed(1)+'%';document.getElementById('e-status').textContent=remaining<0?'Over budget by '+money(-remaining):'Within budget';document.getElementById('budget-input').value=state.budget;const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('expense-body').innerHTML=sorted.map(x=>`<tr><td>${escapeHtml(x.desc)}</td><td>${escapeHtml(x.cat)}</td><td>${escapeHtml(x.date)}</td><td><strong>${money(x.amount)}</strong></td><td><button class="small danger" onclick="deleteExpense(${x.id})">Delete</button></td></tr>`).join('');document.getElementById('expense-empty').classList.toggle('hidden',sorted.length>0);renderDashboard()}
- function selectPlan(plan) {
+ 
+function selectPlan(plan) {
+  const message = document.getElementById("plan-message");
+
+  if (plan === "Premium") {
+    openPayment();
+  } else {
+    message.textContent = "Basic Free Plan selected!";
+    localStorage.setItem("gharsetu_selected_plan", "Basic");
+  }
+}
+
+function openPayment() {
+  document.getElementById("payment-modal").style.display = "flex";
+  document.getElementById("payment-success").style.display = "none";
+}
+
+function closePayment() {
+  document.getElementById("payment-modal").style.display = "none";
+}
+
+function completeDemoPayment() {
+  const method = document.getElementById("payment-method").value;
+
+  localStorage.setItem("gharsetu_selected_plan", "Premium");
+
+  localStorage.setItem(
+    "gharsetu_demo_subscription",
+    JSON.stringify({
+      plan: "Premium",
+      price: 149,
+      method: method,
+      status: "Demo Successful",
+      date: new Date().toISOString()
+    })
+  );
+
+  document.getElementById("payment-success").style.display = "block";
+
   document.getElementById("plan-message").textContent =
-    plan === "Premium"
-      ? "Premium selected! Payment is not enabled yet."
-      : "Basic Free Plan selected!";
+    "Premium selected successfully! (Demo only)";
+}
+
  }function previewGroceryPhoto() {
   const input = document.getElementById("grocery-photo");
   const preview = document.getElementById("grocery-preview");
