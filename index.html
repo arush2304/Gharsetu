@@ -95,6 +95,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 <main class="wrap">
 <div class="nav" id="nav">
 <button class="active" data-page="dashboard">Dashboard</button><button data-page="ration">Smart Ration</button><button data-page="shopping">Shopping List</button><button data-page="alerts">Smart Alerts</button><button data-page="expenses">Monthly Expenses</button><button data-page="family">Family & Settings</button>
+  <button data-page="analysis" onclick="renderExpenseAnalysis()">📊 Expense Analysis</button>
 </div>
 <section id="dashboard" class="page">
 <div class="row"><div><h2>Family Dashboard</h2><p class="sub">Your household essentials at a glance.</p></div><button class="primary" onclick="go('ration')">＋ Manage Ration</button></div>
@@ -125,6 +126,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
       <p>✓ Photo Scanner</p>
       <p>✓ Master List & Family</p>
       <p>✓ Health Suggestions</p>
+      <p>Expense History & Analysis</p>
       <button onclick="selectPlan('Premium')">
         Explore Premium
       </button>
@@ -214,6 +216,16 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 <div class="card section"><h3>Add an expense</h3><form id="expense-form" class="formgrid"><div class="field"><label>Description</label><input id="expense-desc" required placeholder="e.g. Weekly groceries"></div><div class="field"><label>Category</label><select id="expense-cat"><option>Groceries</option><option>Milk & Dairy</option><option>Household</option><option>Other</option></select></div><div class="field"><label>Amount (₹)</label><input id="expense-amount" type="number" min="1" step="1" required placeholder="e.g. 250"></div><div><button class="primary" type="submit">＋ Add expense</button></div></form></div>
 <div class="card section"><h3>Monthly budget setting</h3><form id="budget-form" class="formgrid three"><div class="field"><label>Budget amount (₹)</label><input id="budget-input" type="number" min="0" step="1" required></div><div><button class="primary" type="submit">Save budget</button></div></form></div>
 </section>
+  <section id="analysis" class="page hidden">
+  <h2>📊 Expense History & Analysis</h2>
+  <p class="sub">View your household expenses month by month.</p>
+
+  <div class="card section">
+    <div id="expense-analysis-content">
+      <p class="sub">Loading expense history...</p>
+    </div>
+  </div>
+  </section>
 <section id="family" class="page hidden">
 <div class="row"><div><h2>Family & Settings</h2><p class="sub">Demo family panel and local data controls.</p></div><button onclick="go('dashboard')">← Dashboard</button></div>
 <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
@@ -313,7 +325,147 @@ function deleteShopping(id){const x=state.shopping.find(a=>a.id===id);if(x&&conf
 document.getElementById('shop-form').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('shop-name').value.trim();if(!name)return;state.shopping.push({id:Date.now(),name,priority:document.getElementById('shop-priority').value,when:document.getElementById('shop-when').value.trim()||'No timing set',done:false});save();e.target.reset();renderShopping();alert('Added to shopping list!')});
 function totalSpent(){return state.expenses.reduce((s,x)=>s+Number(x.amount||0),0)}
 function renderExpenses(){const spent=totalSpent(),remaining=state.budget-spent,percent=state.budget?spent/state.budget*100:0;document.getElementById('e-budget').textContent=money(state.budget);document.getElementById('e-spent').textContent=money(spent);document.getElementById('e-remaining').textContent=money(remaining);document.getElementById('e-percent').textContent=percent.toFixed(1)+'%';document.getElementById('e-status').textContent=remaining<0?'Over budget by '+money(-remaining):'Within budget';document.getElementById('budget-input').value=state.budget;const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('expense-body').innerHTML=sorted.map(x=>`<tr><td>${escapeHtml(x.desc)}</td><td>${escapeHtml(x.cat)}</td><td>${escapeHtml(x.date)}</td><td><strong>${money(x.amount)}</strong></td><td><button class="small danger" onclick="deleteExpense(${x.id})">Delete</button></td></tr>`).join('');document.getElementById('expense-empty').classList.toggle('hidden',sorted.length>0);renderDashboard()}
- 
+ // PREMIUM EXPENSE HISTORY & ANALYSIS
+
+function analysisSafeText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, function(ch) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[ch];
+  });
+}
+
+function renderExpenseAnalysis() {
+  const content = document.getElementById("expense-analysis-content");
+  if (!content) return;
+
+  const expenses = Array.isArray(state.expenses) ? state.expenses : [];
+  const monthlyData = {};
+
+  expenses.forEach(function(item) {
+    if (!item.date) return;
+
+    const monthKey = String(item.date).slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(monthKey)) return;
+
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = [];
+    }
+
+    monthlyData[monthKey].push(item);
+  });
+
+  const months = Object.keys(monthlyData).sort().reverse();
+
+  if (months.length === 0) {
+    content.innerHTML = "<p>No expense history available yet. Add expenses first.</p>";
+    return;
+  }
+
+  let html = `
+    <h3>📅 Your Monthly Expense History</h3>
+    <p class="sub">Select any month to see complete details.</p>
+  `;
+
+  months.forEach(function(month) {
+    const records = monthlyData[month];
+
+    const total = records.reduce(function(sum, item) {
+      return sum + Number(item.amount || 0);
+    }, 0);
+
+    const monthName = new Date(month + "-01T00:00:00")
+      .toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric"
+      });
+
+    html += `
+      <div class="card section">
+        <div class="row">
+          <div>
+            <h3>${monthName}</h3>
+            <p class="sub">${records.length} expense entries</p>
+          </div>
+          <strong>${money(total)}</strong>
+        </div>
+
+        <button class="primary"
+          onclick="showExpenseMonth('${month}')">
+          View Details
+        </button>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+}
+
+function showExpenseMonth(month) {
+  const content = document.getElementById("expense-analysis-content");
+  if (!content) return;
+
+  const expenses = state.expenses.filter(function(item) {
+    return item.date && String(item.date).slice(0, 7) === month;
+  });
+
+  expenses.sort(function(a, b) {
+    return String(b.date).localeCompare(String(a.date));
+  });
+
+  const total = expenses.reduce(function(sum, item) {
+    return sum + Number(item.amount || 0);
+  }, 0);
+
+  const monthName = new Date(month + "-01T00:00:00")
+    .toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric"
+    });
+
+  let html = `
+    <button onclick="renderExpenseAnalysis()">← Back to All Months</button>
+
+    <h2 style="margin-top:18px">${analysisSafeText(monthName)}</h2>
+
+    <div class="card stat section">
+      <div class="label">Total Household Expenses</div>
+      <div class="num">${money(total)}</div>
+      <div class="hint">${expenses.length} expense entries</div>
+    </div>
+
+    <h3>Item-wise Expense Details</h3>
+  `;
+
+  if (expenses.length === 0) {
+    html += "<p>No expenses found for this month.</p>";
+  }
+
+  expenses.forEach(function(item) {
+    html += `
+      <div class="card section">
+        <div class="row">
+          <strong>${analysisSafeText(item.desc || "Expense")}</strong>
+          <strong>${money(item.amount)}</strong>
+        </div>
+
+        <p class="sub">
+          Category: ${analysisSafeText(item.cat || "Other")}
+        </p>
+
+        <p class="sub">
+          Date: ${analysisSafeText(item.date || "")}
+        </p>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+  }
 function selectPlan(plan) {
   const message = document.getElementById("plan-message");
 
