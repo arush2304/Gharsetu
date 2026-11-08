@@ -87,14 +87,85 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
   margin-top: 14px;
   border-radius: 10px;
   font-weight: bold;
+}/* SMART MARKET DESIGN */
+.market-search {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+  margin: 12px 0;
 }
+
+.market-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.market-category {
+  padding: 12px 5px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  font-weight: bold;
+  color: #172033;
+}
+
+.market-category.active {
+  background: #16794b;
+  color: white;
+}
+
+.market-product {
+  border: 1px solid #e1e5eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.market-product h3 {
+  margin: 0 0 8px;
+}
+
+.market-price {
+  color: #16794b;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.market-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.market-actions button {
+  flex: 1;
+  min-width: 110px;
+}
+
+.market-details {
+  background: #f4f7fb;
+  padding: 12px;
+  border-radius: 9px;
+  margin-top: 10px;
+  font-size: 14px;
+  }
 </style>
 </head>
 <body>
 <header><div class="top"><div><div class="brand">🏡 GharSetu</div><div class="tag">Ghar Ki Har Zaroorat, Time Se Pehle.</div></div><div class="demo">INTERACTIVE WORKING DEMO · Browser storage</div></div></header>header class="top">
 <main class="wrap">
 <div class="nav" id="nav">
-<button class="active" data-page="dashboard">Dashboard</button><button data-page="ration">Smart Ration</button><button data-page="shopping">Shopping List</button><button data-page="alerts">Smart Alerts</button><button data-page="expenses">Monthly Expenses</button><button data-page="family">Family & Settings</button>
+<button class="active" data-page="dashboard">Dashboard</button><button data-page="ration">Smart Ration</button><button data-page="shopping">Shopping List</button><button data-page="alerts">Smart Alerts</button><button data-page="expenses">Monthly Expenses</button><button data-page="family">Family & Settings</button><button data-page="market" onclick="renderMarket()">
+  🛒 Smart Market
+</button>
   <button data-page="analysis" onclick="renderExpenseAnalysis()">📊 Expense Analysis</button>
 </div>
 <section id="dashboard" class="page">
@@ -234,7 +305,49 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
 </div>
 <div class="card section"><h3>About this prototype</h3><p>GharSetu helps families track household supplies, plan shopping and monitor expenses. This is an interactive front-end demo; login, cloud sync, real notifications and production security would need a backend.</p></div>
 </section>
+<!-- SMART MARKET -->
+<section id="market" class="page hidden">
 
+  <div class="row">
+    <div>
+      <h2>🛒 Smart Market</h2>
+      <p class="sub">Find products for your household.</p>
+    </div>
+  </div>
+
+  <input
+    id="market-search"
+    class="market-search"
+    placeholder="Search products e.g. Rice, Oil, Milk..."
+    oninput="renderMarket()"
+  >
+
+  <div class="market-categories">
+    <button class="market-category active"
+      onclick="setMarketCategory('Grocery',this)">
+      🍚 Grocery
+    </button>
+
+    <button class="market-category"
+      onclick="setMarketCategory('Household',this)">
+      🏠 Household
+    </button>
+
+    <button class="market-category"
+      onclick="setMarketCategory('Extra',this)">
+      ✨ Extra
+    </button>
+  </div>
+
+  <p class="sub">
+    Demo catalogue — prices are sample prices, not live market prices.
+  </p>
+
+  <div id="market-products"></div>
+
+  <div id="market-details"></div>
+
+</section>
 <!-- PREMIUM PAYMENT MODAL -->
 <div id="payment-modal" class="payment-overlay">
   <div class="payment-box">
@@ -563,6 +676,188 @@ function renderDashboard(){if(!state)return;const total=state.ration.length,heal
 function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='GharSetu-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function resetDemo(){if(confirm('Reset all demo changes and restore sample data?')){state=initialState();save();renderAll();go('dashboard');alert('Demo data reset.');}}
+// SMART MARKET FUNCTIONS
+
+let marketCategory = "Grocery";
+
+const marketProducts = [
+  {
+    id: 1,
+    name: "Basmati Rice",
+    brand: "India Gate",
+    category: "Grocery",
+    quantity: "1 kg",
+    price: 150,
+    protein: "8 g",
+    carbs: "78 g",
+    fat: "1 g",
+    fibre: "1 g"
+  },
+  {
+    id: 2,
+    name: "Wheat Flour",
+    brand: "Aashirvaad",
+    category: "Grocery",
+    quantity: "5 kg",
+    price: 250,
+    protein: "10 g",
+    carbs: "72 g",
+    fat: "1.5 g",
+    fibre: "11 g"
+  },
+  {
+    id: 3,
+    name: "Cooking Oil",
+    brand: "Fortune",
+    category: "Grocery",
+    quantity: "1 litre",
+    price: 140,
+    protein: "0 g",
+    carbs: "0 g",
+    fat: "100 g",
+    fibre: "0 g"
+  },
+  {
+    id: 4,
+    name: "Dishwash Liquid",
+    brand: "Demo Brand",
+    category: "Household",
+    quantity: "500 ml",
+    price: 99
+  },
+  {
+    id: 5,
+    name: "Laundry Detergent",
+    brand: "Demo Brand",
+    category: "Household",
+    quantity: "1 kg",
+    price: 120
+  },
+  {
+    id: 6,
+    name: "Notebook",
+    brand: "Demo Brand",
+    category: "Extra",
+    quantity: "1 piece",
+    price: 40
+  }
+];
+
+function setMarketCategory(category, button) {
+  marketCategory = category;
+
+  document.querySelectorAll(".market-category")
+    .forEach(b => b.classList.remove("active"));
+
+  button.classList.add("active");
+  renderMarket();
+}
+
+function renderMarket() {
+  const search = (
+    document.getElementById("market-search")?.value || ""
+  ).toLowerCase();
+
+  const container = document.getElementById("market-products");
+  if (!container) return;
+
+  const products = marketProducts.filter(p =>
+    p.category === marketCategory &&
+    (
+      p.name.toLowerCase().includes(search) ||
+      p.brand.toLowerCase().includes(search)
+    )
+  );
+
+  if (products.length === 0) {
+    container.innerHTML = "<p>No products found.</p>";
+    return;
+  }
+
+  container.innerHTML = products.map(p => `
+    <div class="market-product">
+      <h3>${p.name}</h3>
+      <p class="sub">Brand: ${p.brand}</p>
+      <p>Pack: ${p.quantity}</p>
+      <div class="market-price">₹${p.price}</div>
+
+      <div class="market-actions">
+        <button onclick="showMarketDetails(${p.id})">
+          Details
+        </button>
+
+        <button class="primary"
+          onclick="addMarketProduct(${p.id})">
+          + Shopping List
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function showMarketDetails(id) {
+  const p = marketProducts.find(x => x.id === id);
+  if (!p) return;
+
+  const box = document.getElementById("market-details");
+
+  let nutrition = "";
+
+  if (p.protein !== undefined) {
+    nutrition = `
+      <h4>Nutrition (sample values per 100 g)</h4>
+      <p>Protein: ${p.protein}</p>
+      <p>Carbohydrates: ${p.carbs}</p>
+      <p>Fat: ${p.fat}</p>
+      <p>Fibre: ${p.fibre}</p>
+    `;
+  } else {
+    nutrition = "<p>Nutrition information not applicable or unavailable.</p>";
+  }
+
+  box.innerHTML = `
+    <div class="market-details">
+      <h3>${p.name} — Details</h3>
+      <p>Brand: ${p.brand}</p>
+      <p>Pack quantity: ${p.quantity}</p>
+      <p>Sample price: ₹${p.price}</p>
+      ${nutrition}
+      <p class="sub">
+        Sample catalogue data. Verify product labels and prices
+        before purchasing.
+      </p>
+    </div>
+  `;
+}
+
+function addMarketProduct(id) {
+  const p = marketProducts.find(x => x.id === id);
+  if (!p) return;
+
+  const productName = p.name + " - " + p.brand + " (" + p.quantity + ")";
+
+  const alreadyAdded = state.shopping.some(
+    x => x.name === productName && !x.done
+  );
+
+  if (alreadyAdded) {
+    alert("This product is already in your Shopping List.");
+    return;
+  }
+
+  state.shopping.push({
+    id: Date.now(),
+    name: productName,
+    priority: "Medium",
+    when: "Added from Smart Market",
+    done: false
+  });
+
+  save();
+  renderShopping();
+
+  alert("Product added to your Shopping List!");
+}
 function renderAll(){renderRation();renderShopping();renderExpenses();renderDashboard()}
 load();renderAll();
 </script>
