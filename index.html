@@ -861,4 +861,395 @@ function addMarketProduct(id) {
 function renderAll(){renderRation();renderShopping();renderExpenses();renderDashboard()}
 load();renderAll();
 </script>
+
+<script>
+(function () {
+  const KEY = "gharsetu_new_features_v1";
+
+  let data = JSON.parse(localStorage.getItem(KEY) || "{}");
+
+  data.expiry = data.expiry || [];
+  data.prices = data.prices || [];
+  data.voiceList = data.voiceList || [];
+  data.budget = data.budget || 5000;
+  data.spent = data.spent || 0;
+
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  function safe(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  // DESIGN
+  const style = document.createElement("style");
+  style.textContent = `
+    #gs-new-btn {
+      position:fixed; bottom:18px; right:16px; z-index:9998;
+      background:#176b45; color:white; border:0; border-radius:30px;
+      padding:14px 18px; font-weight:bold; box-shadow:0 3px 12px #0003;
+    }
+    #gs-new-panel {
+      display:none; position:fixed; inset:0; z-index:9999;
+      background:#f4f7f5; overflow:auto; padding:16px;
+      font-family:Arial,sans-serif; color:#183328;
+    }
+    #gs-new-panel .gs-wrap {max-width:650px;margin:auto;padding-bottom:35px}
+    #gs-new-panel .gs-top {
+      display:flex;justify-content:space-between;align-items:center;
+      background:#176b45;color:white;padding:16px;border-radius:14px;
+    }
+    #gs-new-panel button {cursor:pointer}
+    #gs-new-panel .gs-close {
+      background:white;color:#176b45;border:0;border-radius:8px;
+      padding:8px 12px;font-weight:bold;
+    }
+    #gs-new-panel .gs-tabs {
+      display:flex;gap:7px;overflow-x:auto;margin:15px 0;
+    }
+    #gs-new-panel .gs-tab {
+      white-space:nowrap;border:1px solid #176b45;color:#176b45;
+      background:white;border-radius:20px;padding:9px 12px;
+    }
+    #gs-new-panel .gs-tab.active {background:#176b45;color:white}
+    #gs-new-panel .gs-card {
+      background:white;border-radius:14px;padding:16px;margin:12px 0;
+      box-shadow:0 2px 8px #0000000d;
+    }
+    #gs-new-panel input,#gs-new-panel textarea {
+      width:100%;box-sizing:border-box;padding:12px;margin:6px 0 12px;
+      border:1px solid #ccd8d0;border-radius:9px;font-size:15px;
+    }
+    #gs-new-panel .gs-action {
+      background:#176b45;color:white;border:0;border-radius:9px;
+      padding:11px 15px;font-weight:bold;margin:4px 3px 4px 0;
+    }
+    #gs-new-panel .gs-delete {
+      background:#fff0f0;color:#b42318;border:0;border-radius:7px;
+      padding:7px 10px;
+    }
+    #gs-new-panel .gs-item {
+      padding:12px 0;border-bottom:1px solid #e8eee9;
+    }
+    #gs-new-panel .gs-muted {color:#64756b;font-size:13px}
+    #gs-new-panel .gs-result {
+      background:#eaf5ee;padding:12px;border-radius:10px;margin-top:12px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // APP BUTTON AND PANEL
+  const launch = document.createElement("button");
+  launch.id = "gs-new-btn";
+  launch.textContent = "✨ New Features";
+  document.body.appendChild(launch);
+
+  const panel = document.createElement("div");
+  panel.id = "gs-new-panel";
+  panel.innerHTML = `
+    <div class="gs-wrap">
+      <div class="gs-top">
+        <div><b>GharSetu Smart Features</b><div class="gs-muted" style="color:#e5f5e9">Your smart home assistant</div></div>
+        <button class="gs-close" id="gs-close">✕ Close</button>
+      </div>
+      <div class="gs-tabs">
+        <button class="gs-tab active" data-tab="expiry">Expiry</button>
+        <button class="gs-tab" data-tab="chef">AI Chef</button>
+        <button class="gs-tab" data-tab="price">Price Compare</button>
+        <button class="gs-tab" data-tab="voice">Voice List</button>
+        <button class="gs-tab" data-tab="saving">Saving Coach</button>
+      </div>
+      <div id="gs-content"></div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  let currentTab = "expiry";
+
+  launch.addEventListener("click", () => {
+    panel.style.display = "block";
+    render();
+  });
+
+  panel.querySelector("#gs-close").addEventListener("click", () => {
+    panel.style.display = "none";
+  });
+
+  panel.querySelector(".gs-tabs").addEventListener("click", e => {
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    currentTab = btn.dataset.tab;
+    panel.querySelectorAll(".gs-tab").forEach(b =>
+      b.classList.toggle("active", b === btn)
+    );
+    render();
+  });
+
+  // 1. SMART EXPIRY GUARDIAN
+  function expiryHTML() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    let list = data.expiry.map((item, index) => {
+      const date = new Date(item.date + "T00:00:00");
+      const days = Math.ceil((date - today) / 86400000);
+      let status = days < 0 ? "Expired" :
+                   days === 0 ? "Expires today" :
+                   days <= 3 ? "Expiring soon" : "Safe";
+
+      return `<div class="gs-item">
+        <b>${safe(item.name)}</b>
+        <div class="gs-muted">Expiry: ${safe(item.date)}</div>
+        <div>${status} ${days >= 0 ? "(" + days + " days left)" : ""}</div>
+        <button class="gs-delete" data-delete-expiry="${index}">Delete</button>
+      </div>`;
+    }).join("");
+
+    return `<div class="gs-card">
+      <h3>🛡️ Smart Expiry Guardian</h3>
+      <p class="gs-muted">Add food items and their expiry dates. GharSetu will show which items need attention.</p>
+      <form id="gs-expiry-form">
+        <label>Item name</label>
+        <input name="name" placeholder="Example: Milk" required>
+        <label>Expiry date</label>
+        <input name="date" type="date" required>
+        <button class="gs-action">Add Expiry Item</button>
+      </form>
+      <h3>Your Expiry List</h3>
+      ${list || "<p>No expiry items added yet.</p>"}
+    </div>`;
+  }
+
+  // 2. AI CHEF
+  function chefHTML() {
+    return `<div class="gs-card">
+      <h3>👨‍🍳 AI Chef – Aaj Kya Banayein?</h3>
+      <p>Ghar mein available ingredients likho. Main matching recipe ideas suggest karunga.</p>
+      <textarea id="gs-ingredients" rows="3" placeholder="Example: Potato, onion, tomato, rice"></textarea>
+      <button class="gs-action" id="gs-find-recipes">Find Recipes</button>
+      <div id="gs-recipes"></div>
+      <p class="gs-muted">Recipe suggestions are sample ideas. Check ingredients and cooking requirements before preparing food.</p>
+    </div>`;
+  }
+
+  function findRecipes() {
+    const words = document.getElementById("gs-ingredients").value
+      .toLowerCase().split(/[,،]/).map(x => x.trim()).filter(Boolean);
+
+    const recipes = [
+      {name:"Vegetable Pulao", needs:["rice","onion","potato","carrot","peas"]},
+      {name:"Aloo Sabzi", needs:["potato","onion","tomato"]},
+      {name:"Tomato Rice", needs:["rice","tomato","onion"]},
+      {name:"Besan Chilla", needs:["besan","onion","tomato"]},
+      {name:"Dal Rice", needs:["dal","rice","lentils"]},
+      {name:"Vegetable Sandwich", needs:["bread","tomato","potato","onion"]},
+      {name:"Simple Khichdi", needs:["rice","dal","lentils"]}
+    ];
+
+    const matches = recipes.map(r => ({
+      ...r,
+      score:r.needs.filter(n => words.some(w => w.includes(n) || n.includes(w))).length
+    })).filter(r => r.score > 0).sort((a,b) => b.score-a.score);
+
+    document.getElementById("gs-recipes").innerHTML = matches.length
+      ? `<div class="gs-result"><b>Recipe ideas:</b><br>${matches.slice(0,5).map(r =>
+          "🍲 " + safe(r.name) + " — " + r.score + " matching ingredients"
+        ).join("<br>")}</div>`
+      : `<div class="gs-result">No matching recipe found. Try adding ingredients like rice, potato, onion or tomato.</div>`;
+  }
+
+  // 3. SMART PRICE COMPARE
+  function priceHTML() {
+    const list = data.prices.map((p,i) => `
+      <div class="gs-item">
+        <b>${safe(p.item)}</b><br>
+        ${safe(p.brand)} — ₹${Number(p.price).toFixed(2)}
+        <button class="gs-delete" data-delete-price="${i}">Delete</button>
+      </div>
+    `).join("");
+
+    return `<div class="gs-card">
+      <h3>💰 Smart Price Compare</h3>
+      <p class="gs-muted">Enter prices of the same product from different brands or shops to compare them.</p>
+      <form id="gs-price-form">
+        <label>Product name</label>
+        <input name="item" placeholder="Example: Rice 1 kg" required>
+        <label>Brand / Shop</label>
+        <input name="brand" placeholder="Example: Brand A" required>
+        <label>Price in ₹</label>
+        <input name="price" type="number" min="0.01" step="0.01" placeholder="100" required>
+        <button class="gs-action">Add Price</button>
+      </form>
+      <h3>Saved Prices</h3>
+      ${list || "<p>No prices added yet.</p>"}
+      <div class="gs-result">Lowest entered price: ${
+        data.prices.length
+        ? "₹" + Math.min(...data.prices.map(p => Number(p.price))).toFixed(2)
+        : "Add prices to compare"
+      }</div>
+    </div>`;
+  }
+
+  // 4. VOICE SHOPPING ASSISTANT
+  function voiceHTML() {
+    const list = data.voiceList.map((item,i) => `
+      <div class="gs-item">
+        ${safe(item)}
+        <button class="gs-delete" data-delete-voice="${i}">Delete</button>
+      </div>
+    `).join("");
+
+    return `<div class="gs-card">
+      <h3>🎙️ Voice Shopping Assistant</h3>
+      <p>Hindi ya English mein bolo aur item shopping list mein add karo.</p>
+      <button class="gs-action" id="gs-start-voice">🎤 Start Speaking</button>
+      <p id="gs-voice-status" class="gs-muted">Voice feature availability depends on your browser.</p>
+      <form id="gs-voice-form">
+        <input name="item" placeholder="Or type an item here" required>
+        <button class="gs-action">Add Item</button>
+      </form>
+      <h3>Your Voice Shopping List</h3>
+      ${list || "<p>Your list is empty.</p>"}
+    </div>`;
+  }
+
+  // 5. SMART SAVING COACH
+  function savingHTML() {
+    const remaining = Number(data.budget) - Number(data.spent);
+    const percent = data.budget > 0 ? (data.spent/data.budget)*100 : 0;
+
+    let advice = remaining < 0
+      ? "Your spending is above your budget. Review optional purchases and update your shopping plan."
+      : percent >= 80
+      ? "You have used most of your budget. Compare prices and check your shopping list before buying."
+      : percent >= 50
+      ? "Keep checking your expenses. Plan the remaining purchases carefully."
+      : "Good start! Keep recording expenses to understand your monthly spending.";
+
+    return `<div class="gs-card">
+      <h3>🧠 Smart Saving Coach</h3>
+      <p class="gs-muted">Enter your monthly household budget and expenses to get saving suggestions.</p>
+      <form id="gs-saving-form">
+        <label>Monthly budget (₹)</label>
+        <input name="budget" type="number" min="1" value="${safe(data.budget)}" required>
+        <label>Total amount spent (₹)</label>
+        <input name="spent" type="number" min="0" value="${safe(data.spent)}" required>
+        <button class="gs-action">Update Budget</button>
+      </form>
+      <div class="gs-result">
+        <b>Budget:</b> ₹${Number(data.budget).toFixed(2)}<br>
+        <b>Spent:</b> ₹${Number(data.spent).toFixed(2)}<br>
+        <b>${remaining >= 0 ? "Remaining" : "Over budget"}:</b>
+        ₹${Math.abs(remaining).toFixed(2)}<br>
+        <b>Budget used:</b> ${percent.toFixed(1)}%
+      </div>
+      <div class="gs-result"><b>💡 Saving suggestion</b><br>${advice}</div>
+    </div>`;
+  }
+
+  // SHOW CURRENT FEATURE
+  function render() {
+    const content = document.getElementById("gs-content");
+
+    if (currentTab === "expiry") content.innerHTML = expiryHTML();
+    if (currentTab === "chef") content.innerHTML = chefHTML();
+    if (currentTab === "price") content.innerHTML = priceHTML();
+    if (currentTab === "voice") content.innerHTML = voiceHTML();
+    if (currentTab === "saving") content.innerHTML = savingHTML();
+  }
+
+  // FORM AND BUTTON ACTIONS
+  panel.addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const fd = new FormData(form);
+
+    if (form.id === "gs-expiry-form") {
+      data.expiry.push({
+        name:fd.get("name").trim(),
+        date:fd.get("date")
+      });
+      save(); render();
+    }
+
+    if (form.id === "gs-price-form") {
+      data.prices.push({
+        item:fd.get("item").trim(),
+        brand:fd.get("brand").trim(),
+        price:Number(fd.get("price"))
+      });
+      save(); render();
+    }
+
+    if (form.id === "gs-voice-form") {
+      data.voiceList.push(fd.get("item").trim());
+      save(); render();
+    }
+
+    if (form.id === "gs-saving-form") {
+      data.budget = Number(fd.get("budget"));
+      data.spent = Number(fd.get("spent"));
+      save(); render();
+    }
+  });
+
+  panel.addEventListener("click", function(e) {
+    const t = e.target;
+
+    if (t.dataset.deleteExpiry !== undefined) {
+      data.expiry.splice(Number(t.dataset.deleteExpiry),1);
+      save(); render();
+    }
+
+    if (t.dataset.deletePrice !== undefined) {
+      data.prices.splice(Number(t.dataset.deletePrice),1);
+      save(); render();
+    }
+
+    if (t.dataset.deleteVoice !== undefined) {
+      data.voiceList.splice(Number(t.dataset.deleteVoice),1);
+      save(); render();
+    }
+
+    if (t.id === "gs-find-recipes") findRecipes();
+
+    if (t.id === "gs-start-voice") {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const status = document.getElementById("gs-voice-status");
+
+      if (!Speech) {
+        status.textContent = "Voice recognition is not supported in this browser. Please type your item.";
+        return;
+      }
+
+      const recognition = new Speech();
+      recognition.lang = "hi-IN";
+      recognition.interimResults = false;
+
+      status.textContent = "Listening... Speak now.";
+      recognition.onresult = function(event) {
+        const words = event.results[0][0].transcript.trim();
+        data.voiceList.push(words);
+        save();
+        render();
+      };
+      recognition.onerror = function() {
+        status.textContent = "Could not recognize voice. Please try again or type the item.";
+      };
+      recognition.onend = function() {
+        const s = document.getElementById("gs-voice-status");
+        if (s) s.textContent = "Voice assistant ready.";
+      };
+      recognition.start();
+    }
+  });
+
+  render();
+})();
+</script>
+
 </body></html>
