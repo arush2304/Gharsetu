@@ -157,6 +157,81 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
   margin-top: 10px;
   font-size: 14px;
   }
+/* SMART MEAL PLANNER */
+.meal-wrap {
+  display: grid;
+  gap: 14px;
+}
+.meal-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.meal-filters select {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 7px;
+  border: 1px solid #d9dfd9;
+  border-radius: 10px;
+  background: white;
+  color: #222;
+}
+.meal-card {
+  border: 1px solid #e2e8e2;
+  border-radius: 14px;
+  padding: 14px;
+  background: white;
+  margin-bottom: 10px;
+}
+.meal-card h3 {
+  margin: 0 0 7px;
+}
+.meal-card p {
+  margin: 5px 0;
+  color: #626b62;
+  font-size: 13px;
+}
+.meal-tag {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #edf7ed;
+  color: #28743a;
+  font-size: 12px;
+  margin: 3px 3px 3px 0;
+}
+.meal-btn {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  background: #287b45;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.meal-details {
+  border: 1px solid #dce6dc;
+  border-radius: 14px;
+  padding: 15px;
+  background: #f8fcf8;
+}
+.meal-details li {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.meal-empty {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff8e9;
+  color: #76551c;
+}
+@media (max-width: 480px) {
+  .meal-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -167,6 +242,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
   🛒 Smart Market
 </button>
   <button data-page="analysis" onclick="renderExpenseAnalysis()">📊 Expense Analysis</button>
+  
+<button data-page="meal" onclick="renderMealPlanner()">🍳 Smart Meal Planner</button>
 </div>
 <section id="dashboard" class="page">
 <div class="row"><div><h2>Family Dashboard</h2><p class="sub">Your household essentials at a glance.</p></div><button class="primary" onclick="go('ration')">＋ Manage Ration</button></div>
@@ -348,6 +425,47 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 12px}
   <div id="market-details"></div>
 
 </section>
+
+<section id="meal" class="page">
+  <div class="meal-wrap">
+    <div>
+      <h2>🍳 Smart Meal Planner</h2>
+      <p>Apne ghar ke ration se aaj ka meal plan banao.</p>
+    </div>
+
+    <div class="meal-filters">
+      <select id="meal-diet" onchange="renderMealPlanner()">
+        <option value="Vegetarian">Vegetarian</option>
+        <option value="Eggetarian">Eggetarian</option>
+        <option value="Non-Vegetarian">Non-Vegetarian</option>
+      </select>
+
+      <select id="meal-time" onchange="renderMealPlanner()">
+        <option value="Breakfast">Breakfast</option>
+        <option value="Lunch">Lunch</option>
+        <option value="Dinner">Dinner</option>
+      </select>
+
+      <select id="meal-servings" onchange="renderMealPlanner()">
+        <option value="1">1 Person</option>
+        <option value="2" selected>2 Persons</option>
+        <option value="3">3 Persons</option>
+        <option value="4">4 Persons</option>
+        <option value="5">5 Persons</option>
+        <option value="6">6 Persons</option>
+      </select>
+    </div>
+
+    <div>
+      <h3>Recommended Recipes</h3>
+      <p id="meal-summary">Checking your ration...</p>
+      <div id="meal-recipes"></div>
+    </div>
+
+    <div id="meal-details"></div>
+  </div>
+</section>
+
 <!-- PREMIUM PAYMENT MODAL -->
 <div id="payment-modal" class="payment-overlay">
   <div class="payment-box">
@@ -858,7 +976,374 @@ function addMarketProduct(id) {
 
   alert("Product added to your Shopping List!");
 }
-function renderAll(){renderRation();renderShopping();renderExpenses();renderDashboard()}
+// SMART MEAL PLANNER DATA
+
+const mealRecipes = [
+  {
+    name: "Vegetable Poha",
+    diet: "Vegetarian",
+    time: "Breakfast",
+    minutes: 20,
+    ingredients: ["poha", "onion", "potato", "peas", "oil", "salt"],
+    steps: [
+      "Poha ko paani se halka wash karke drain karo.",
+      "Pan mein oil garam karke onion aur potato cook karo.",
+      "Peas, salt aur poha add karo.",
+      "Achhi tarah mix karke 3-4 minutes cook karo."
+    ]
+  },
+  {
+    name: "Besan Chilla",
+    diet: "Vegetarian",
+    time: "Breakfast",
+    minutes: 15,
+    ingredients: ["besan", "onion", "tomato", "salt", "oil"],
+    steps: [
+      "Besan mein paani milakar smooth batter banao.",
+      "Chopped onion, tomato aur salt add karo.",
+      "Tawa par batter spread karo.",
+      "Dono sides cook karke serve karo."
+    ]
+  },
+  {
+    name: "Vegetable Upma",
+    diet: "Vegetarian",
+    time: "Breakfast",
+    minutes: 20,
+    ingredients: ["suji", "onion", "carrot", "peas", "oil", "salt"],
+    steps: [
+      "Suji ko dry roast karo.",
+      "Pan mein oil aur onion cook karo.",
+      "Vegetables aur paani add karo.",
+      "Suji dheere-dheere add karke mix karo."
+    ]
+  },
+  {
+    name: "Dal Rice",
+    diet: "Vegetarian",
+    time: "Lunch",
+    minutes: 30,
+    ingredients: ["rice", "dal", "turmeric", "salt", "oil"],
+    steps: [
+      "Rice aur dal ko wash karo.",
+      "Dal mein turmeric aur paani add karke cook karo.",
+      "Rice ko alag cook karo.",
+      "Dono ko saath serve karo."
+    ]
+  },
+  {
+    name: "Vegetable Pulao",
+    diet: "Vegetarian",
+    time: "Lunch",
+    minutes: 30,
+    ingredients: ["rice", "peas", "carrot", "onion", "oil", "salt"],
+    steps: [
+      "Rice ko wash karke 10 minutes soak karo.",
+      "Pan mein oil aur onion cook karo.",
+      "Vegetables aur rice add karo.",
+      "Paani add karke rice cook hone tak pakao."
+    ]
+  },
+  {
+    name: "Aloo Paratha",
+    diet: "Vegetarian",
+    time: "Dinner",
+    minutes: 25,
+    ingredients: ["wheat flour", "potato", "salt", "oil"],
+    steps: [
+      "Wheat flour se dough prepare karo.",
+      "Boiled potato mash karke salt mix karo.",
+      "Dough mein filling bharo aur paratha roll karo.",
+      "Tawa par dono sides cook karo."
+    ]
+  },
+  {
+    name: "Egg Bhurji",
+    diet: "Eggetarian",
+    time: "Breakfast",
+    minutes: 15,
+    ingredients: ["egg", "onion", "tomato", "oil", "salt"],
+    steps: [
+      "Onion aur tomato chop karo.",
+      "Pan mein oil garam karke vegetables cook karo.",
+      "Eggs add karke mix karo.",
+      "Egg properly cook hone par serve karo."
+    ]
+  },
+  {
+    name: "Egg Rice",
+    diet: "Eggetarian",
+    time: "Lunch",
+    minutes: 20,
+    ingredients: ["rice", "egg", "onion", "oil", "salt"],
+    steps: [
+      "Rice ko pehle cook kar lo.",
+      "Pan mein onion cook karo.",
+      "Egg add karke fully cook karo.",
+      "Rice aur salt mix karke serve karo."
+    ]
+  },
+  {
+    name: "Chicken Rice",
+    diet: "Non-Vegetarian",
+    time: "Lunch",
+    minutes: 35,
+    ingredients: ["chicken", "rice", "onion", "tomato", "oil", "salt"],
+    steps: [
+      "Chicken ko safely clean aur prepare karo.",
+      "Pan mein onion aur tomato cook karo.",
+      "Chicken add karke completely cooked hone tak pakao.",
+      "Cooked rice ke saath serve karo."
+    ]
+  },
+  {
+    name: "Chicken Curry",
+    diet: "Non-Vegetarian",
+    time: "Dinner",
+    minutes: 40,
+    ingredients: ["chicken", "onion", "tomato", "oil", "salt"],
+    steps: [
+      "Pan mein oil aur onion cook karo.",
+      "Tomato aur seasoning add karo.",
+      "Chicken add karke thoroughly cook karo.",
+      "Gravy ready hone par serve karo."
+    ]
+  }
+];
+
+let mealVisibleRecipes = [];
+
+function mealClean(value) {
+  return String(value || "").toLowerCase().trim();
+}
+
+function getMealRationNames() {
+  let ration = state && state.ration ? state.ration : [];
+
+  if (!Array.isArray(ration)) {
+    ration = Object.values(ration);
+  }
+
+  return ration.map(item => {
+    if (typeof item === "string") return mealClean(item);
+
+    return mealClean(
+      item.name ||
+      item.item ||
+      item.itemName ||
+      item.product ||
+      ""
+    );
+  }).filter(Boolean);
+}
+
+function mealHasIngredient(ingredient, rationNames) {
+  const target = mealClean(ingredient);
+
+  return rationNames.some(name =>
+    name === target ||
+    name.includes(target) ||
+    target.includes(name)
+  );
+}
+
+function renderMealPlanner() {
+  const dietEl = document.getElementById("meal-diet");
+  const timeEl = document.getElementById("meal-time");
+  const servingsEl = document.getElementById("meal-servings");
+  const listEl = document.getElementById("meal-recipes");
+  const summaryEl = document.getElementById("meal-summary");
+  const detailsEl = document.getElementById("meal-details");
+
+  if (!dietEl || !timeEl || !servingsEl || !listEl) return;
+
+  const diet = dietEl.value;
+  const time = timeEl.value;
+  const rationNames = getMealRationNames();
+
+  mealVisibleRecipes = mealRecipes.filter(recipe =>
+    recipe.diet === diet && recipe.time === time
+  );
+
+  listEl.innerHTML = "";
+  detailsEl.innerHTML = "";
+
+  if (rationNames.length === 0) {
+    summaryEl.textContent =
+      "Pehle Smart Ration mein apne ghar ke items add karo.";
+  } else {
+    summaryEl.textContent =
+      "Tumhare ration ke basis par " +
+      mealVisibleRecipes.length + " recipes check ki gayi hain.";
+  }
+
+  mealVisibleRecipes.forEach((recipe, index) => {
+    const available = recipe.ingredients.filter(item =>
+      mealHasIngredient(item, rationNames)
+    );
+
+    const missing = recipe.ingredients.filter(item =>
+      !mealHasIngredient(item, rationNames)
+    );
+
+    const card = document.createElement("div");
+    card.className = "meal-card";
+
+    const heading = document.createElement("h3");
+    heading.textContent = recipe.name;
+
+    const info = document.createElement("p");
+    info.textContent =
+      "⏱ " + recipe.minutes + " minutes | " +
+      "🥣 " + available.length + "/" +
+      recipe.ingredients.length + " ingredients available";
+
+    const tag = document.createElement("span");
+    tag.className = "meal-tag";
+    tag.textContent = missing.length === 0
+      ? "All ingredients available"
+      : missing.length + " ingredients missing";
+
+    const button = document.createElement("button");
+    button.className = "meal-btn";
+    button.textContent = "View Recipe";
+    button.onclick = () => showMealRecipe(index);
+
+    card.append(heading, info, tag, document.createElement("br"), button);
+    listEl.appendChild(card);
+  });
+
+  if (mealVisibleRecipes.length === 0) {
+    listEl.innerHTML =
+      '<div class="meal-empty">Is category ke liye abhi recipe available nahi hai.</div>';
+  }
+}
+
+function showMealRecipe(index) {
+  const recipe = mealVisibleRecipes[index];
+  if (!recipe) return;
+
+  const servings = Number(
+    document.getElementById("meal-servings").value
+  ) || 1;
+
+  const rationNames = getMealRationNames();
+
+  const missing = recipe.ingredients.filter(item =>
+    !mealHasIngredient(item, rationNames)
+  );
+
+  const details = document.getElementById("meal-details");
+  details.innerHTML = "";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "🍽️ " + recipe.name;
+
+  const servingsText = document.createElement("p");
+  servingsText.textContent =
+    "Servings: " + servings + " persons | " +
+    "Preparation time: " + recipe.minutes + " minutes";
+
+  const ingredientHeading = document.createElement("h4");
+  ingredientHeading.textContent = "Ingredients";
+
+  const ingredientList = document.createElement("ul");
+
+  recipe.ingredients.forEach(item => {
+    const li = document.createElement("li");
+    const available = mealHasIngredient(item, rationNames);
+
+    li.textContent =
+      (available ? "✅ " : "❌ ") + item +
+      (available ? " — Available" : " — Missing");
+
+    ingredientList.appendChild(li);
+  });
+
+  const stepsHeading = document.createElement("h4");
+  stepsHeading.textContent = "Cooking Instructions";
+
+  const stepsList = document.createElement("ol");
+
+  recipe.steps.forEach(step => {
+    const li = document.createElement("li");
+    li.textContent = step;
+    stepsList.appendChild(li);
+  });
+
+  details.append(
+    heading,
+    servingsText,
+    ingredientHeading,
+    ingredientList,
+    stepsHeading,
+    stepsList
+  );
+
+  if (missing.length > 0) {
+    const missingHeading = document.createElement("p");
+    missingHeading.textContent =
+      "Missing items: " + missing.join(", ");
+
+    const addButton = document.createElement("button");
+    addButton.className = "meal-btn";
+    addButton.textContent = "Add Missing Items to Shopping List";
+    addButton.onclick = () => addMealMissingToShopping(missing);
+
+    details.append(missingHeading, addButton);
+  } else {
+    const readyText = document.createElement("p");
+    readyText.textContent =
+      "🎉 Great! Tumhare paas saare ingredients available hain.";
+    details.appendChild(readyText);
+  }
+}
+
+function addMealMissingToShopping(items) {
+  if (!state.shopping) state.shopping = [];
+
+  let added = 0;
+
+  items.forEach(name => {
+    const alreadyExists = state.shopping.some(item => {
+      const itemName = typeof item === "string"
+        ? item
+        : item.name || item.item || item.itemName || "";
+
+      return mealClean(itemName) === mealClean(name);
+    });
+
+    if (!alreadyExists) {
+      state.shopping.push({
+        id: Date.now() + Math.random(),
+        name: name,
+        item: name,
+        quantity: "1",
+        qty: "1",
+        amount: "1",
+        done: false,
+        purchased: false
+      });
+      added++;
+    }
+  });
+
+  save();
+
+  if (typeof renderShopping === "function") {
+    renderShopping();
+  }
+
+  alert(
+    added > 0
+      ? added + " missing item(s) added to Shopping List!"
+      : "Ye items pehle se Shopping List mein hain."
+  );
+}
+
+function renderAll(){renderRation();renderShopping();renderExpenses();renderDashboard()
+renderMealPlanner();
+}
 load();renderAll();
 </script>
 
